@@ -28,9 +28,9 @@ sumtiming = 0;
 
 for t = 1:trials
     
-    [Y input_bits parity] = chirrup_encode(r,l,re,m,p,K,EbN0);
+    [Y, input_bits, parity] = chirrup_encode(r,l,re,m,p,K,EbN0);
     
-    [output_bits timing_trial] = chirrup_decode(Y,r,l,parity,re,m,p,K);
+    [output_bits, timing_trial] = chirrup_decode(Y,r,l,parity,re,m,p,K);
     
     propfound_trial = compare_bits(input_bits,output_bits);
     

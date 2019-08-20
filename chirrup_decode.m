@@ -20,7 +20,7 @@
 %
 % AJT (12/9/18)
 
-function [output_bits timing] = chirrup_decode(Y,r,l,parity,re,m,p,K,params_in)
+function [output_bits, timing] = chirrup_decode(Y,r,l,parity,re,m,p,K,params_in)
 
 %default parameter values
 params.alpha = 0.1; %accept components if coefficient is within alpha of 1
@@ -28,6 +28,7 @@ params.circuits = 5; %number of circuits in peeling decoder
 params.sparsity_factor = 3; %factor by which number of iterations exceeds 
 %expected sparsity for a given slot
 params.tree_order = 3; %number of candidates per row in findPb tree search
+sumpropfound = 0  ;
 
 %read in parameter inputs
 if (nargin==9)
@@ -148,6 +149,7 @@ end
         propfound_trial = 0;
         sumpropfound = sumpropfound + propfound_trial;
         timings(patches+1) = toc;
+        output_bits=[];
     else
         if (patches>1)
             output_bits = tree_decoder(processed_bits,l,parity);
