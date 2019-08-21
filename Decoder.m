@@ -76,11 +76,6 @@ classdef Encoder
         %
         % AJT (12/9/18)
 
-
-
-
-
-
             global outer_recov
 
             warning('off','MATLAB:rankDeficientMatrix');
@@ -305,6 +300,33 @@ classdef Encoder
             end
             i = i(upper);
             j = j(upper);
+        end
+
+
+        function bits = find_bits(self,res)
+
+            bits = [];
+            OK = [];
+            nOK = 0;
+
+            K = length(res);
+            s = 1;
+
+            for k = 1:K
+
+                Pk = res(k).P;
+                bk = res(k).b;
+                ck = res(k).c;
+                compsk = res(k).comps;
+                [i j] = self.upper_indices();
+                for l = 1:length(i)
+                    Pvec(l) = Pk(i(l),j(l));
+                end
+                bits2 = [Pvec bk];
+                bits2 = bits2(1,2:end);
+                slot_bit = (intobinary(compsk(1)-1,p))';
+                bits(k,:) = [bits2 slot_bit];
+            end
         end
 
     end
