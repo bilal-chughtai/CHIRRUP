@@ -30,6 +30,7 @@ for input=1:length(input_decimal)
     binaryinput = intobinary(input_decimal(input),B);
     input_bits = [input_bits binaryinput];
 end
+%%
 
 
 encoder=Encoder(r,l,re,m,p,K,EbN0,input_bits, B, patches)
