@@ -6,6 +6,7 @@ m=6
 K=2
 p=6
 EbN0=100
+patches=2^r
 
 %calculate length of messages
     if (re==0)
@@ -13,7 +14,7 @@ EbN0=100
     else
          B_patch = m*(m+1)/2 + p - 1;
     end
-B = 2^r*B_patch - sum(l(2:end));
+B = patches*B_patch - sum(l(2:end));
 
 
 %verify inputs are valid
@@ -31,5 +32,5 @@ for input=1:length(input_decimal)
 end
 
 
-encoder=Encoder(r,l,re,m,p,K,EbN0,input_bits, B)
-encoder.chirrup_encode
+encoder=Encoder(r,l,re,m,p,K,EbN0,input_bits, B, patches)
+[Y, parity] = encoder.chirrup_encode
