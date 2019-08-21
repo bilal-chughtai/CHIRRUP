@@ -21,7 +21,7 @@
 %
 % AJT (12/9/18)
 
-function [propfound ave_time] = chirrup_test(r,l,re,m,p,K,EbN0,trials)
+function [propfound, ave_time] = chirrup_test(r,l,re,m,p,K,EbN0,trials, mode)
 
 sumpropfound = 0;
 sumtiming = 0;

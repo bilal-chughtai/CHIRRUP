@@ -21,7 +21,7 @@ Y = zeros(2^m,2^p);
 for k = 1:K
     
     %compute slots
-    comps = compute_slots(bits(k,:),re,m,p);
+    comps = compute_slots(b its(k,:),re,m,p);
    
     %make (P,b) for each slot
     bits1 = [0 bits(k,:)];

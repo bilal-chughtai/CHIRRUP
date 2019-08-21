@@ -20,7 +20,7 @@ function [patch_bits parity] = tree_encoder(input_bits,N,n,l)
 l(1) = 0;
 l(n) = N*n - size(input_bits,1) - sum(l) + l(n);
 
-patch_bits(:,:,1) = input_bits(1:N,:);
+%patch_bits(:,:,1) = input_bits(1:N,:);
 count = N;
 
 for i = 2:n
