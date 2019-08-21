@@ -9,10 +9,11 @@ classdef Encoder
         EbN0
         input_bits
         B
+        patches
     end
 
     methods
-        function self = Encoder(r,l,re,m,p,K,EbN0,input_bits, B)
+        function self = Encoder(r,l,re,m,p,K,EbN0,input_bits, B, patches)
             self.r = r;
             self.l = l;
             self.re = re;
@@ -22,11 +23,12 @@ classdef Encoder
             self.EbN0 = EbN0;
             self.input_bits = input_bits;
             self.B=B
+            self.patches=patches
         end
 
 
 
-        function [Y input_bits parity] = chirrup_encode(self)
+        function [Y parity] = chirrup_encode(self)
 
         %chirrup_encode  Generates K random messages and performs CHIRRUP encoding
         %
@@ -149,12 +151,12 @@ classdef Encoder
                 %make (P,b) for each slot
                 bits1 = [0 bits(k,:)];
                 bits2 = [1 bits(k,:)];
-                [Pee1,bee1] = makePb(self.re,self.m,bits1);
-                [Pee2,bee2] = makePb(self.re,self.m,bits2);
+                [Pee1,bee1] = self.makePb(bits1);
+                [Pee2,bee2] = self.makePb(bits2);
 
                 %generate binary chirp vector for each slot
-                rm1 = gen_chirp(Pee1,bee1);
-                rm2 = gen_chirp(Pee2,bee2);
+                rm1 = self.gen_chirp(Pee1,bee1);
+                rm2 = self.gen_chirp(Pee2,bee2);
 
                 %add onto measurement
                 Y(:,comps(1)) = Y(:,comps(1))+rm1;
@@ -186,6 +188,66 @@ classdef Encoder
                 trans(1) = 1;
             end
             comps(2) = outofbinary(mod(bits(end-self.p+1:end)+trans,2))+1;
+        end
+
+
+        function rm = gen_chirp(self,P,b)
+
+            M = length(b);
+
+            % construct Reed-Muller code from P and b
+            rm = zeros(2^M,1);
+            a = zeros(M,1);
+            for q = 1:2^M
+                sum1 = a'*P*a;
+                sum2 = b*a;
+                rm(q) = i^sum1 * (-1)^sum2;
+                % next a
+                for ix = M:-1:1
+                    if a(ix)==1
+                        a(ix)=0;
+                    else
+                        a(ix)=1;
+                        break;
+                    end
+                end
+            end
+        end
+
+
+
+
+        function [P,b] = makePb(self,bits)
+
+            if (self.re==0)
+                nMuse = self.m*(self.m+1)/2;
+            else
+                nMuse = self.m*(self.m-1)/2;
+            end
+
+            basis = self.makeDGC();
+
+            Pbits = bits(1:nMuse);
+
+            P = mod( sum(basis(:,:,find(Pbits)),3), 2);
+
+            b = bits(nMuse+1:nMuse+self.m);
+        end
+
+
+
+
+        function K = makeDGC(self)
+
+            [i j] = upper_indices(self.m,self.re);
+
+            for p = 1:length(i)
+
+                K(:,:,p) = zeros(self.m,self.m);
+                K(i(p),j(p),p) = 1;
+                K(j(p),i(p),p) = 1;
+            end
+
         end
 
 

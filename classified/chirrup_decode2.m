@@ -68,63 +68,63 @@ for patch = 1:patches
                 
                 %run chirp reconstruction on given slot
                 sparsity_ratio = 3;
-                recov = chirp_rec(Yp(:,slot),re,ceil(params.sparsity_factor*K/2^(p-1)),slot,params);
+                recov = chirp_rec(Yp(:,slot),self.re,ceil(params.sparsity_factor*self.K/2^(self.p-1)),slot,params);
                 
-                [i j] = upper_indices(m,re);
+                [i j] = upper_indices(self.m,self.re);
 
                 if (~isempty(recov(1).P))
                     
                     %find slot pairs for each recovered component
                     for r = 1:size(recov,2)
-                        Q=recov(r).P;
+                        Q=recov(self.r).P;
                         for k = 1:length(i)
                             Pvec(k) = Q(i(k),j(k));
                         end
-                        Pbvec = [Pvec recov(r).b];
+                        Pbvec = [Pvec recov(self.r).b];
                         already = 0;
-                        if (re==0)
-                            trans = Pbvec(m*(m+1)/2+m:-1:m*(m+1)/2+m-p+1);
+                        if (self.re==0)
+                            trans = Pbvec(self.m*(self.m+1)/2+self.m:-1:self.m*(self.m+1)/2+self.m-self.p+1);
                         else
-                            trans = Pbvec(m*(m-1)/2+m:-1:m*(m-1)/2+m-p+1);
+                            trans = Pbvec(self.m*(self.m-1)/2+self.m:-1:self.m*(self.m-1)/2+self.m-self.p+1);
                         end
                         if outofbinary(trans)==0
                             trans(1) = 1;
                         end
                         
-                        if (re==0)
-                            if recov(r).P(1,1)==1
-                                recov(r).P(1,1) = 0;
-                                recov(r).comps(2) = slot;
-                                recov(r).comps(1) = outofbinary(mod(trans+(intobinary(slot-1,p))',2))+1;
+                        if (self.re==0)
+                            if recov(self.r).P(1,1)==1
+                                recov(self.r).P(1,1) = 0;
+                                recov(self.r).comps(2) = slot;
+                                recov(self.r).comps(1) = outofbinary(mod(trans+(intobinary(slot-1,self.p))',2))+1;
                             else
-                                recov(r).comps(1) = slot;
-                                recov(r).comps(2) = outofbinary(mod(trans+(intobinary(slot-1,p))',2))+1;
+                                recov(self.r).comps(1) = slot;
+                                recov(self.r).comps(2) = outofbinary(mod(trans+(intobinary(slot-1,self.p))',2))+1;
                             end
                         else
-                            if recov(r).P(1,2)==1
-                                recov(r).P(1,2) = 0;
-                                recov(r).P(2,1) = 0;
-                                recov(r).comps(2) = slot;
-                                recov(r).comps(1) = outofbinary(mod(trans+(intobinary(slot-1,p))',2))+1;
+                            if recov(self.r).P(1,2)==1
+                                recov(self.r).P(1,2) = 0;
+                                recov(self.r).P(2,1) = 0;
+                                recov(self.r).comps(2) = slot;
+                                recov(self.r).comps(1) = outofbinary(mod(trans+(intobinary(slot-1,self.p))',2))+1;
                             else
-                                recov(r).comps(1) = slot;
-                                recov(r).comps(2) = outofbinary(mod(trans+(intobinary(slot-1,p))',2))+1;
+                                recov(self.r).comps(1) = slot;
+                                recov(self.r).comps(2) = outofbinary(mod(trans+(intobinary(slot-1,self.p))',2))+1;
                             end
                         end
                         
                         %accept component if its coefficient is close to 1
                         %if (abs(recov(r).c - 1)<params.alpha) %alternative condition
-                        if (real(recov(r).c)>1-params.alpha && real(recov(r).c)<1+params.alpha && abs(imag(recov(r).c))<params.alpha)
+                        if (real(recov(self.r).c)>1-params.alpha && real(recov(r).c)<1+params.alpha && abs(imag(recov(self.r).c))<params.alpha)
                             for r2 = 1:count-1
-                                if (min(min(recov(r).P==outer_recov(r2).P)) && min(recov(r).b==outer_recov(r2).b))
+                                if (min(min(recov(r).P==outer_recov(r2).P)) && min(recovself.(self.r).b==outer_recov(r2).b))
                                     already = 1;
                                 end
                             end
                             if already==0
-                                outer_recov(count).P = recov(r).P;
-                                outer_recov(count).b = recov(r).b;
-                                outer_recov(count).c = recov(r).c;
-                                outer_recov(count).comps = recov(r).comps;
+                                outer_recov(count).P = recov(self.r).P;
+                                outer_recov(count).b = recov(self.r).b;
+                                outer_recov(count).c = recov(self.r).c;
+                                outer_recov(count).comps = recov(self.r).comps;
                                 count = count + 1;
                             end
                         end
@@ -134,7 +134,7 @@ for patch = 1:patches
         end
         
         %convert components back into bits
-        bit_matrix = find_bits(outer_recov,re,m,p);
+        bit_matrix = find_bits(outer_recov,self.re,self.m,self.p);
         if (size(bit_matrix,1)==0) 
             flag = 1;
         end
@@ -152,15 +152,15 @@ end
         output_bits=[];
     else
         if (patches>1)
-            output_bits = tree_decoder(processed_bits,l,parity);
+            output_bits = tree_decoder(processed_bits,l,self.parity);
         else
             output_bits = bit_matrix';
         end    
-        kmin = min(K,size(output_bits,2));
+        kmin = min(self.K,size(output_bits,2));
         output_bits = output_bits(:,1:kmin);
         timings(patches+1) = toc;
     end
-    
+
     timing = sum(timings);
 
 output_decimal=[]
