@@ -7,6 +7,7 @@ K=2
 p=6
 EbN0=100
 patches=2^r
+params_in=[]
 
 %calculate length of messages
     if (re==0)
@@ -35,3 +36,5 @@ end
 
 encoder=Encoder(r,l,re,m,p,K,EbN0,input_bits, B, patches)
 [Y, parity] = encoder.chirrup_encode
+decoder=Decoder(Y,r,l,parity,re,m,p,K,patches,params_in)
+[output_bits, timing_trial] = decoder.chirrup_decode(Y,r,l,parity,re,m,p,K)

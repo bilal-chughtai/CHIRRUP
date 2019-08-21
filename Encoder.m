@@ -1,4 +1,5 @@
 classdef Encoder
+%Class responsible for encoding chirps - contains all functons pertaining to encoding
     properties
         r
         l
@@ -55,12 +56,8 @@ classdef Encoder
 
             patches = 2^self.r;
             parity = [];
-
-
-
             %generate random messages
-           % input_bits = rand(B,K)>0.5;
-
+            % input_bits = rand(B,K)>0.5;
             %tree encoding
             if (patches>1)
                 [patch_bits parity] = self.tree_encoder(self.input_bits,B_patch,patches,l);
@@ -68,20 +65,15 @@ classdef Encoder
             else
                 patch_bits = self.input_bits';
             end
-
             flag = false;
-
             %generate measurements for each patch
             for patch = 1:patches
-
                 sigma = sqrt(patches*2^self.m/(self.B*self.EbN0));
                 Y{patch} = self.sim_from_bits(sigma,patch_bits(:,:,patch));
-
-
             end
         end
 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         function [patch_bits parity] = tree_encoder(self,N,n)
 
@@ -107,20 +99,15 @@ classdef Encoder
 
             patch_bits(:,:,1) = input_bits(1:N,:);
             count = N;
-
             for i = 2:n
-
                 patch_bits(1:N-l(i),:,i) = input_bits(count+1:count+N-l(i),:);
                 count = count + N - l(i);
                 parity{i} = double(rand(l(i),count)>0.5);
                 patch_bits(N-l(i)+1:N,:,i) = mod(parity{i}*input_bits(1:count,:),2);
-
             end
         end
 
-
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         function Y = sim_from_bits(self,sigma,bits)
 
@@ -140,9 +127,7 @@ classdef Encoder
         %
         % AJT (12/9/18)
 
-
             Y = zeros(2^self.m,2^self.p);
-
             for k = 1:self.K
 
                 %compute slots
@@ -172,6 +157,7 @@ classdef Encoder
             end
         end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         function comps = compute_slots(self, bits)
             if (self.re==0)
@@ -179,43 +165,14 @@ classdef Encoder
             else
                 nMuse = self.m*(self.m-1)/2;
             end
-
             disp(bits)
             comps(1) = outofbinary(bits(end-self.p+1:end))+1;
-
             trans = bits(nMuse+self.m-1:-1:nMuse+self.m-self.p);
             if outofbinary(trans)==0
                 trans(1) = 1;
             end
             comps(2) = outofbinary(mod(bits(end-self.p+1:end)+trans,2))+1;
         end
-
-
-        function rm = gen_chirp(self,P,b)
-
-            M = length(b);
-
-            % construct Reed-Muller code from P and b
-            rm = zeros(2^M,1);
-            a = zeros(M,1);
-            for q = 1:2^M
-                sum1 = a'*P*a;
-                sum2 = b*a;
-                rm(q) = i^sum1 * (-1)^sum2;
-                % next a
-                for ix = M:-1:1
-                    if a(ix)==1
-                        a(ix)=0;
-                    else
-                        a(ix)=1;
-                        break;
-                    end
-                end
-            end
-        end
-
-
-
 
         function [P,b] = makePb(self,bits)
 
@@ -224,33 +181,40 @@ classdef Encoder
             else
                 nMuse = self.m*(self.m-1)/2;
             end
-
-            basis = self.makeDGC();
-
+            basis = makeDGC(self.re,self.m);
             Pbits = bits(1:nMuse);
-
             P = mod( sum(basis(:,:,find(Pbits)),3), 2);
-
             b = bits(nMuse+1:nMuse+self.m);
         end
 
-
-
-
-        function K = makeDGC(self)
-
-            [i j] = upper_indices(self.m,self.re);
-
-            for p = 1:length(i)
-
-                K(:,:,p) = zeros(self.m,self.m);
-                K(i(p),j(p),p) = 1;
-                K(j(p),i(p),p) = 1;
-            end
-
-        end
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     end
+
+    methods(Static)
+
+            function rm = gen_chirp(P,b)
+
+                M = length(b);
+                % construct Reed-Muller code from P and b
+                rm = zeros(2^M,1);
+                a = zeros(M,1);
+                for q = 1:2^M
+                    sum1 = a'*P*a;
+                    sum2 = b*a;
+                    rm(q) = i^sum1 * (-1)^sum2;
+                    % next a
+                    for ix = M:-1:1
+                        if a(ix)==1
+                            a(ix)=0;
+                        else
+                            a(ix)=1;
+                            break;
+                        end
+                    end
+                end
+            end
+    end
+
+
 end
