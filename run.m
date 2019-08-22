@@ -1,4 +1,4 @@
-function [] = run(r, l, re, m, p, EbN0, mode, userinput, trials, K)
+function [] = run(r, l, re, m, p, sigma, mode, userinput, trials)
 %master testing function
 %mode="manual" or "rand"
 %if manual then input is K - the number of messages
@@ -19,10 +19,12 @@ function [] = run(r, l, re, m, p, EbN0, mode, userinput, trials, K)
 
     %if mode is random generate some random inputs
     if mode=="rand"
+        K=userinput;
         for trial = 1:trials
-            input_bits = rand(B,K)>0.5;
-            [propfound_trial, timing_trial] = chirrup_test(r,l,re,m,p,K,EbN0,input_bits,B,patches,params_in);
+            input_bits = rand(B,K) > 0.5;
+            [propfound_trial, timing_trial] = chirrup_test(r,l,re,m,p,K,sigma,input_bits,B,patches,params_in);
             sumpropfound=sumpropfound+propfound_trial;
+            sumtiming=sumtiming+timing_trial;
         end
     end
 
@@ -38,8 +40,9 @@ function [] = run(r, l, re, m, p, EbN0, mode, userinput, trials, K)
             input_bits = [input_bits binaryinput];
         end
         for trial = 1:trials
-                [propfound_trial, timing_trial] = chirrup_test(r,l,re,m,p,K,EbN0,input_bits,B,patches, params_in);
+                [propfound_trial, timing_trial] = chirrup_test(r,l,re,m,p,K,sigma,input_bits,B,patches, params_in);
                 sumpropfound=sumpropfound+propfound_trial;
+                sumtiming=sumtiming+timing_trial;
         end
     end
 
@@ -50,8 +53,8 @@ end
 
 
 
-function [propfound_trial, timing_trial]= chirrup_test(r,l,re,m,p,K,EbN0,input_bits,B,patches,params_in)
-    encoder=Encoder(r,l,re,m,p,K,EbN0,input_bits, B, patches);
+function [propfound_trial, timing_trial] = chirrup_test(r,l,re,m,p,K,sigma,input_bits,B,patches,params_in)
+    encoder=Encoder(r,l,re,m,p,K,sigma,input_bits, B, patches);
     [Y, parity] = encoder.chirrup_encode;
     decoder=Decoder(Y,r,l,parity,re,m,p,K,patches,params_in);
     [output_bits, timing_trial] = decoder.chirrup_decode(Y,r,l,parity,re,m,p,K);

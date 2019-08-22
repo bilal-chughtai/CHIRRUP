@@ -2,7 +2,7 @@ classdef Decoder
 %Class responsible for decoding chirps - contains all functons pertaining to decoding
     properties
         Y
-        r
+        r 
         parity
         re
         m
@@ -160,7 +160,6 @@ classdef Decoder
 
                     %convert components back into bits
                     bit_matrix = self.find_bits(outer_recov);
-                    disp(bit_matrix)
                     if (size(bit_matrix,1)==0)
                         flag = 1;
                     end

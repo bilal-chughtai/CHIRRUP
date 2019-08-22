@@ -7,24 +7,24 @@ classdef Encoder
         m
         p
         K
-        EbN0
+        sigma
         input_bits
         B
         patches
     end
 
     methods
-        function self = Encoder(r,l,re,m,p,K,EbN0,input_bits, B, patches)
+        function self = Encoder(r,l,re,m,p,K,sigma,input_bits, B, patches)
             self.r = r;
             self.l = l;
             self.re = re;
             self.m = m;
             self.p = p;
             self.K = K;
-            self.EbN0 = EbN0;
+            self.sigma = sigma;
             self.input_bits = input_bits;
-            self.B=B
-            self.patches=patches
+            self.B=B;
+            self.patches=patches;
         end
 
 
@@ -68,8 +68,7 @@ classdef Encoder
             flag = false;
             %generate measurements for each patch
             for patch = 1:patches
-                sigma = sqrt(patches*2^self.m/(self.B*self.EbN0));
-                Y{patch} = self.sim_from_bits(sigma,patch_bits(:,:,patch));
+                Y{patch} = self.sim_from_bits(patch_bits(:,:,patch));
             end
         end
 
@@ -109,7 +108,7 @@ classdef Encoder
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        function Y = sim_from_bits(self,sigma,bits)
+        function Y = sim_from_bits(self,bits)
 
         % sim_from_bits  Generates binary chirp measurements from bits
         %
@@ -150,9 +149,9 @@ classdef Encoder
 
             %add noise (Gaussian for real, Complex Gaussian for complex)
             if (self.re==0)
-                Y = Y + repmat(sigma*(randn(2^self.m,1)+1i*randn(2^self.m,1)),[1 2^self.p]);
+                Y = Y + repmat(self.sigma*(randn(2^self.m,1)+1i*randn(2^self.m,1)),[1 2^self.p]);
             else
-                Y = Y + repmat(sigma*randn(2^m,1),[1 2^self.p]);
+                Y = Y + repmat(self.sigma*randn(2^m,1),[1 2^self.p]);
 
             end
         end
@@ -165,7 +164,6 @@ classdef Encoder
             else
                 nMuse = self.m*(self.m-1)/2;
             end
-            disp(bits)
             comps(1) = outofbinary(bits(end-self.p+1:end))+1;
             trans = bits(nMuse+self.m-1:-1:nMuse+self.m-self.p);
             if outofbinary(trans)==0
