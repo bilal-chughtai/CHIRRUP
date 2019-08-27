@@ -151,7 +151,7 @@ classdef Encoder
             if (self.re==0)
                 Y = Y + repmat(self.sigma*(randn(2^self.m,1)+1i*randn(2^self.m,1)),[1 2^self.p]);
             else
-                Y = Y + repmat(self.sigma*randn(2^m,1),[1 2^self.p]);
+                Y = Y + repmat(self.sigma*randn(2^self.m,1),[1 2^self.p]);
 
             end
         end
