@@ -14,14 +14,14 @@ classdef Decoder
 
     methods
         function self = Decoder(Y,r,l,parity,re,m,p,K,patches,params_in)
-            self.Y=Y
-            self.r=r
-            self.parity=parity
-            self.re=re
-            self.m=m
-            self.p=p
-            self.K=K
-            self.patches=patches
+            self.Y=Y;
+            self.r=r;
+            self.parity=parity;
+            self.re=re;
+            self.m=m;
+            self.p=p;
+            self.K=K;
+            self.patches=patches;
 
             %default parameter values
             self.params.alpha = 0.1; %accept components if coefficient is within alpha of 1
@@ -53,7 +53,7 @@ classdef Decoder
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        function [output_bits, timing] = chirrup_decode(self, Y,r,l,parity,re,m,p,K,params_in)
+        function [output_bits, timing] = chirrup_decode(self)
 
          %chirrup_decode  Performs CHIRRUP decoding
         %
@@ -80,18 +80,19 @@ classdef Decoder
             global outer_recov
             warning('off','MATLAB:rankDeficientMatrix');
             flag = false;
+            sumpropfound=0;
 
             for patch = 1:self.patches
 
                     tic
                     outer_recov = [];
                     count = 1;
-                    Yp = Y{patch};
+                    Yp = self.Y{patch};
                     found = [];
 
                     %cycle through the slots repeatedly
                     for c = 1:self.params.circuits
-                        for slot = 1:2^p
+                        for slot = 1:2^self.p
 
                             %run chirp reconstruction on given slot
                             sparsity_ratio = 3;
@@ -139,7 +140,7 @@ classdef Decoder
 
                                     %accept component if its coefficient is close to 1
                                     %if (abs(recov(r).c - 1)<params.alpha) %alternative condition
-                                    if (real(recov(r).c)>1-self.params.alpha && real(recov(r).c)<1+self.params.alpha && abs(imag(recov(r).c))<self.params.alpha)
+                                    if (real(recov(r).c)>1-self.params.alpha && real(recov(r).c)<1+self.params.alpha && abs(imag(recov(r).c))<self.params.alpha) %<-----------------
                                         for r2 = 1:count-1
                                             if (min(min(recov(r).P==outer_recov(r2).P)) && min(recov(r).b==outer_recov(r2).b))
                                                 already = 1;
