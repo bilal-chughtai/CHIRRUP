@@ -1,4 +1,4 @@
-function [B, propfound] = run(r, l, re, m, p, sigma, mode, userinput, trials)
+function [ave_time, B, propfound] = run(r, l, re, m, p, sigma, mode, userinput, trials)
 %master testing function
 %mode="manual" or "rand"
 %if manual then input is K - the number of messages
@@ -30,7 +30,7 @@ function [B, propfound] = run(r, l, re, m, p, sigma, mode, userinput, trials)
 
     if mode=="manual"
         input_bits=[]
-        K=length(userinput)
+        K=length(userinput);
         for input=1:length(userinput)
             if userinput(input) >= 2^B
                 error(['input values must be in at most', B ,' bits.'])
@@ -46,8 +46,8 @@ function [B, propfound] = run(r, l, re, m, p, sigma, mode, userinput, trials)
         end
     end
 
-    propfound = sumpropfound/trials
-    ave_time = sumtiming/trials
+    propfound = sumpropfound/trials;
+    ave_time = sumtiming/trials;
 
 end
 
