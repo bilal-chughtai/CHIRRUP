@@ -143,8 +143,11 @@ classdef Encoder
                 rm2 = self.gen_chirp(Pee2,bee2);
 
                 %add onto measurement
-                Y(:,comps(1)) = Y(:,comps(1))+rm1;
-                Y(:,comps(2)) = Y(:,comps(2))+rm2;
+                %setofcoefs=[1,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2];
+                %pos = randi(length(setofcoefs));
+                d=rand+1;
+                Y(:,comps(1)) = Y(:,comps(1))+d*rm1;
+                Y(:,comps(2)) = Y(:,comps(2))+d*rm2;
             end
 
             %add noise (Gaussian for real, Complex Gaussian for complex)
@@ -171,6 +174,8 @@ classdef Encoder
             end
             comps(2) = outofbinary(mod(bits(end-self.p+1:end)+trans,2))+1;
         end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         function [P,b] = makePb(self,bits)
 

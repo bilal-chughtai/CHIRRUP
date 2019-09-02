@@ -1,16 +1,16 @@
+addpath("utils")
 r = 0
 l = 0
 re = 1
-m = 6
-p = 2
+
 sigma = 0
 mode = "rand"
-trials = 100
+trials = 50
 
   
 prop=1  
-mvalues=[6,7,8]
-pvalues=[5,6,7]
+mvalues=[6]
+pvalues=[5]
 
 for a = 1:size(mvalues, 2)
     m=mvalues(a);
