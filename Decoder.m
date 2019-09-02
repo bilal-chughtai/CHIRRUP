@@ -25,11 +25,11 @@ classdef Decoder
 
             %default parameter values
             self.params.alpha = 0.1; %accept components if coefficient is within alpha of 1
-            self.params.circuits = 5; %number of circuits in peeling decoder
+            self.params.circuits = 3; %5; %number of circuits in peeling decoder
             self.params.sparsity_factor = 3; %factor by which number of iterations exceeds
             %expected sparsity for a given slot
-            self.params.tree_order = 3; %number of candidates per row in findPb tree search
-            sumpropfound = 0 ;
+            self.params.tree_order = 1; %3; %number of candidates per row in findPb tree search
+            sumpropfound = 0;
 
             %read in parameter inputs
             if (nargin==9)
@@ -139,8 +139,9 @@ classdef Decoder
                                     end
 
                                     %accept component if its coefficient is close to 1
-                                    %if (abs(recov(r).c - 1)<params.alpha) %alternative condition
-                                    if (real(recov(r).c)>1-self.params.alpha && real(recov(r).c)<1+self.params.alpha && abs(imag(recov(r).c))<self.params.alpha) %<-----------------
+                                    %if (abs(recov(r).c - 2)<self.params.alpha) || (abs(recov(r).c - 1)<self.params.alpha) %alternative condition
+                                    if (real(recov(r).c)>1-self.params.alpha && real(recov(r).c)<2+self.params.alpha && abs(imag(recov(r).c))<self.params.alpha)
+                                    %if 1==1%<-----------------
                                         for r2 = 1:count-1
                                             if (min(min(recov(r).P==outer_recov(r2).P)) && min(recov(r).b==outer_recov(r2).b))
                                                 already = 1;
@@ -608,6 +609,7 @@ classdef Decoder
         % given data vector y and "error value" e,
         % compute Hadamard transform prb  of yprod = conj(y(a)) * y(a+e)
 
+
         % Sina Jafarpour 28/3/08
 
             Mpow = length(y);
@@ -683,7 +685,14 @@ classdef Decoder
         %             diagonal no longer constrained to be all-zeros
         %             total # free elements thus M(M+3)/2
 
-            MM = ((M^2+3*M)/2); %    MMold = ((M^2+M)/2);
+            if self.re == 0
+                MM = ((M^2+3*M)/2); %    MMold = ((M^2+M)/2);
+                ixmid = (M+1)*M/2;
+            else
+                MM = 0.5*M*(M+1)
+                ixmid = (M-1)*M/2;
+            end
+
             if isempty(bstr)
                 %bstr = floor(rand*2^MM);  % precision errors!
                 bstr = randn(1,MM)>0;
@@ -701,16 +710,23 @@ classdef Decoder
                 % should check that length is M, but what to do if it ain't?
             end
 
-            ixmid = (M+1)*M/2;  %  ixmidold = (M-1)*M/2;
 
             % fprintf('MM %i (prev %i)   ix %i (prev %i)   len %i\n',...
             %     MM,MMold,ixmid,ixmidold,length(bvec));
             P = false(M);
-            ix = find(tril(ones(M),0));  % indices of lower tri, including diag
+            if self.re == 0
+                ix = find(tril(ones(M),0));  % indices of lower tri, including diag
+            else
+                ix = find(tril(ones(M),-1)) % doesnt include the diagonal
+            end
+            disp(P(ix))
             P(ix) = bvec(1:ixmid);
             P = P | P';  % make symmetric
+            disp(P)
             b = bvec(ixmid+1:end);
-        end
+
+            end
+        
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -782,6 +798,7 @@ classdef Decoder
                     error(['no such method:  ' int2str(mth)])
             end
         end
+
 
 
     end
