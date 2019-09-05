@@ -1,4 +1,4 @@
-function [ave_time, B, propfound] = run(r, l, re, m, p, sigma, mode, userinput, trials)
+function [ave_time, B, propfound] = runner(r, l, re, m, p, sigma, mode, userinput, trials)
 %master testing function
 %mode="manual" or "rand"
 %if manual then input is K - the number of messages

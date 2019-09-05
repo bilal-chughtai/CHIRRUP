@@ -1,16 +1,16 @@
 addpath("utils")
 r = 0
 l = 0
-re = 1
+re = 0
 
 sigma = 0
 mode = "rand"
-trials = 50
+trials = 1
 
   
 prop=1  
-mvalues=[6]
-pvalues=[5]
+mvalues=[6,7]
+pvalues=[5,6]
 
 for a = 1:size(mvalues, 2)
     m=mvalues(a);
@@ -31,11 +31,12 @@ for a = 1:size(mvalues, 2)
         while prop > 0.05
             K=[K, i];
             disp(i)
-            [ave_time, B, prop] = run(r, l, re, m, p, sigma, mode, i, trials);
+            [ave_time, B, prop] = runner(r, l, re, m, p, sigma, mode, i, trials);
             output = [output, prop];
             time = [time, ave_time];
             disp(prop)
             i=i+1;
+            break
         end
         
         filename=strcat("tests/B", num2str(B),'r', num2str(r),'l', num2str(l),'r', num2str(r),'m', num2str(m),'p', num2str(p), 'trials', num2str(trials))

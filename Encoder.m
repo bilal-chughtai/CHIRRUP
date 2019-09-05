@@ -139,11 +139,11 @@ classdef Encoder
                 [Pee2,bee2] = self.makePb(bits2);
 
                 %generate binary chirp vector for each slot
-                %rm1 = self.gen_chirp(Pee1,bee1);
-                %rm2 = self.gen_chirp(Pee2,bee2);
+                rm1 = self.gen_chirp(Pee1,bee1);
+                rm2 = self.gen_chirp(Pee2,bee2);
 
-                rm1 = self.gen_general_chirp_no_b(Pee1,4)
-                rm2 = self.gen_general_chirp_no_b(Pee2,4)
+                %rm1 = self.gen_general_chirp_no_b(Pee1,6)
+                %rm2 = self.gen_general_chirp_no_b(Pee2,6)
 
                 %add onto measurement
                 %setofcoefs=[1,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2];
@@ -221,31 +221,7 @@ classdef Encoder
             end
 
 
-            function rm = gen_general_chirp_no_b(P,k)
 
-                zeta=exp(2*pi*i/k)
-                M = size(P,1);
-                % M=length(b);
-                % constructs a general Read-Muller code as above, but with no b term, and replacing i with a general root of unity, e^2i*pi/k. k denotes the degree of root of unity
-                rm = zeros(2^M,1);
-                a = zeros(M,1);
-                for q = 1:2^M
-                    sum1 = a'*P*a;
-                    %sum2 = b*a;
-                    rm(q) = zeta^sum1 %* (-1)^sum2;
-                    % next a
-                    for ix = M:-1:1 %interesting binary counter
-                        if a(ix)==1
-                            a(ix)=0;
-                        else
-                            a(ix)=1;
-                            break;
-                        end
-                    end
-                end
-
-                disp(rm)
-            end
 
 
     end
