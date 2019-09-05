@@ -11,7 +11,8 @@ for basis_index=1:m
     probs=probe_ye(y,e,1);
     probs=abs(probs);
     [value, location]=sort(-probs);
-    disp(location)
+    disp(location(1)-1)
+    
     
 end
     
@@ -22,7 +23,7 @@ end
 
 
 
-function [prb] = probe_ye(y,e,power)
+function prb = probe_ye(y,e,power)
 
         % probe_ye  probe data vector with error vector
         %
@@ -60,7 +61,7 @@ function [prb] = probe_ye(y,e,power)
 
 
 function rm = gen_general_chirp_no_b(P,k)
-    zeta=exp(2*pi*i/k)
+    zeta=exp(2*pi*i/2^k);
     M = size(P,1);
     % M=length(b);
     % constructs a general Read-Muller code as above, but with no b term, and replacing i with a general root of unity, e^2i*pi/k. k denotes the degree of root of unity
