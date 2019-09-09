@@ -1,20 +1,34 @@
 m=4;
-k=2;
+k=3;
 P=randP(m,k)
-y=gen_general_chirp_no_b(P,k) 
-%case k=3
+y=gen_general_chirp_no_b(P,k); 
 
+kbin=dec2bin(k);
+iterations=k-1;
+P_recovered = zeros(m);
+iteration=1
 
-for basis_index=1:m
-    e=zeros(m,1);
-    e(basis_index)=1;
-    probs=probe_ye(y,e,1);
-    probs=abs(probs);
-    [value, location]=sort(-probs);
-    disp(location(1)-1)
+while iteration <= iterations
+    for basis_index=1:m
     
+
+    %while iteration <= iterations
+        power=iterations-iteration+1
+        e=zeros(m,1);
+        e(basis_index,1)=1;
+        probs=probe_ye(y,e,power,P_recovered);
+        probs=abs(probs);
+        [value, location]=sort(-probs);
+        location=location(1)-1;
+        rowpart = dec2bin(location,m)=='1'
+        P_recovered(basis_index,:)=P_recovered(basis_index,:)+2^(iteration-1).*rowpart
+        %iteration=iteration+1
+    end
+    iteration=iteration+1
     
 end
+
+P_recovered - P
     
 
 
@@ -23,7 +37,7 @@ end
 
 
 
-function prb = probe_ye(y,e,power)
+function [prb] = probe_ye(y,e,power,P_recovered)
 
         % probe_ye  probe data vector with error vector
         %
@@ -40,19 +54,28 @@ function prb = probe_ye(y,e,power)
 
             % index vector (starting at 0)
             a = (dec2bin((0:Mpow-1))=='1')';
+            %a
+
+            %peel_off
+            peel_off = i.^-(e'*P_recovered*a)
 
             % a plus e values
             apebin = bitxor(a,e);
+            %apebin
             
             apedec=2.^(M-1:-1:0)*apebin;
+            %apedec
 
             % y(a+e)
             yape = y(apedec+1);
+            %[y yape]
 
             % product
             yprod = conj(y).*yape;
 
             yprod = yprod.^power;
+            
+            yprod = yprod.*peel_off'
 
             % use fast Walsh-Hadamard transform routine
             prb = fhtnat(yprod);
