@@ -1,7 +1,10 @@
 m=4;
 k=3;
 P=randP(m,k)
+
 y=gen_general_chirp_no_b(P,k); 
+
+
 
 kbin=dec2bin(k);
 iterations=k-1;
@@ -16,8 +19,8 @@ while iteration <= iterations
         power=iterations-iteration+1
         e=zeros(m,1);
         e(basis_index,1)=1;
-        probs=probe_ye(y,e,power,P_recovered);
-        probs=abs(probs);
+        probs=probe_ye(y,e,power,P_recovered, P); %TODO: feed in P_0
+        probs=abs(probs)
         [value, location]=sort(-probs);
         location=location(1)-1;
         rowpart = dec2bin(location,m)=='1'
@@ -37,7 +40,7 @@ P_recovered - P
 
 
 
-function [prb] = probe_ye(y,e,power,P_recovered)
+function [prb] = probe_ye(y,e,power,P_recovered, P)
 
         % probe_ye  probe data vector with error vector
         %
@@ -72,10 +75,20 @@ function [prb] = probe_ye(y,e,power,P_recovered)
 
             % product
             yprod = conj(y).*yape;
+            
 
             yprod = yprod.^power;
             
-            yprod = yprod.*peel_off'
+            %i^(e'*P*e)*i.^(2*e'*P_recovered*a)
+            
+            yprod = yprod.*peel_off.'
+            
+            P1 = (P - mod(P,2))/2
+            
+            expected_yprod = exp(i*pi/4)^(e'*P*e)*(-1).^(e'*P1*a)
+            
+            yprod-expected_yprod.'
+           
 
             % use fast Walsh-Hadamard transform routine
             prb = fhtnat(yprod);
@@ -92,6 +105,7 @@ function rm = gen_general_chirp_no_b(P,k)
     a = zeros(M,1);
     for q = 1:2^M
         sum1 = a'*P*a;
+        
         %sum2 = b*a;
         rm(q) = zeta^sum1; %* (-1)^sum2;
         % next a
