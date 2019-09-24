@@ -12,6 +12,7 @@ classdef Encoder
         input_bits      % raw input bitstring
         B               % number of bits being encoded
         patches         % number of patches
+        B_patch         % number of bits per patch
     end
 
     methods
@@ -26,17 +27,17 @@ classdef Encoder
             self.input_bits = input_bits;
             self.patches=2^r;
             if (re==0)
-                 B_patch = m*(m+3)/2 + p - 1;
+                 self.B_patch = m*(m+3)/2 + p - 1;
             else
-                 B_patch = m*(m+1)/2 + p - 1;
+                 self.B_patch = m*(m+1)/2 + p - 1;
             end
-            self.B = self.patches*B_patch - sum(l(2:end));
+            self.B = self.patches*self.B_patch - sum(l(2:end));
         end
 
-        function [self,input_bits] = generate_random_bits(self)
+        function [self,bits] = generate_random_bits(self)
         % generates some random bits to pass into encoder
             bits = rand(self.B,self.K) > 0.5;
-            self.input_bits=bits
+            self.input_bits=bits;
         end
 
 
@@ -59,7 +60,7 @@ classdef Encoder
             % input_bits = rand(B,K)>0.5;
             %tree encoding
             if (self.patches>1)
-                [patch_bits parity] = self.tree_encoder(self.input_bits,B_patch,self.patches,self.l);
+                [patch_bits parity] = self.tree_encoder(self.B_patch);
                 patch_bits = permute(patch_bits,[2 1 3]);
             else
                 patch_bits = self.input_bits.';
@@ -75,6 +76,7 @@ classdef Encoder
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         function [patch_bits parity] = tree_encoder(self,N,n)
+            n=self.patches
 
         % tree_encoder  Encodes a message into patches using parity check digits
         %
@@ -97,7 +99,7 @@ classdef Encoder
             patch_bits(:,:,1) = self.input_bits(1:N,:);
             count = N;
             for i = 2:n
-                patch_bits(1:N-self.l(i),:,i) = self.input_bits(count+1:count+N-l(i),:);
+                patch_bits(1:N-self.l(i),:,i) = self.input_bits(count+1:count+N-self.l(i),:);
                 count = count + N - self.l(i);
                 parity{i} = double(rand(self.l(i),count)>0.5);
                 patch_bits(N-self.l(i)+1:N,:,i) = mod(parity{i}*self.input_bits(1:count,:),2);

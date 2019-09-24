@@ -168,7 +168,7 @@ classdef Decoder
                     output_bits=[];
                 else
                     if (self.patches>1)
-                        output_bits = tree_decoder(processed_bits,self.l,self.parity);
+                        output_bits = self.tree_decoder(processed_bits);
                     else
                         output_bits = bit_matrix';
                     end
