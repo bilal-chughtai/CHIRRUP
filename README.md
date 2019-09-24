@@ -7,7 +7,7 @@ for unsourced multiple access' (Calderbank/Thompson 2018). There is also
 code for performing repeated tests to obtain average success proportions 
 and timings.
 
-##Code
+## Code
 There are 3 main files,  
 
 Encoder.m, contains the Encoder class, responsible for encoding chirps  
@@ -15,9 +15,9 @@ Decoder.m, contains the Decoder class, responsible for decoding chrips
 run.m, contains the functions run and chirrup_test, of which the latter runs a single test, and the former runs multiple
 
 Additionally, there is a tester.m script file, in which parameters may be modifed, and the code run, saving results and outputting a plot
-##Usage
+## Usage
 
-###Encoding
+### Encoding
 To perform CHIRRUP encoding:  
 ```
 encoder=Encoder(r,l,re,m,p,K,EbN0,input_bits);  
@@ -45,7 +45,7 @@ bits), using complex binary chirps of size 2^7 in 2^7 slots, with
 energy-per-bit Eb/N0=20.
 
 
-###Decoding
+### Decoding
 
 To perform CHIRRUP decoding,
 ```
@@ -75,7 +75,7 @@ The proportion of correctly identified messages can be found using
 A repeated test over a number of trials can be run using
 [propfound ave_time] = run(r, l, re, m, p, EbN0, K, trials)
 
-##Authors
+## Authors
 The code is largely authored by Andrew Thompson (National Physical 
 Laboratory, UK), but some of the original chirp reconstruction code is also 
 written by Sina Jafarpour (Facebook, USA), based on the work in the paper
