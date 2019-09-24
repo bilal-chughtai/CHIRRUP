@@ -3,9 +3,8 @@ r = 0
 l = 0
 re = 1
 
-sigma = 0
-mode = "rand"
-trials = 50
+EbN0=10
+trials = 1
 
   
 prop=1  
@@ -31,7 +30,7 @@ for a = 1:size(mvalues, 2)
         while prop > 0.05
             K=[K, i];
             disp(i)
-            [ave_time, B, prop] = run(r, l, re, m, p, sigma, mode, i, trials);
+            [ave_time, prop] = run(r, l, re, m, p, EbN0, i, trials);
             output = [output, prop];
             time = [time, ave_time];
             disp(prop)

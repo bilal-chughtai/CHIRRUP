@@ -1,19 +1,21 @@
 classdef Decoder
 %Class responsible for decoding chirps - contains all functons pertaining to decoding
     properties
-        Y
-        r 
-        parity
-        re
-        m
-        p
-        K
-        params
-        patches
+        Y       % Y{p} is a 2^m x 2^p matrix of measurements for patch p
+        r       % 0, 1 or 2; 2^r patches
+        parity  % parity check codes generated in the tree encoding, leave empty if only 1 patch (r=0) is used
+        re      % logical: false=complex chirps, true=real chirps
+        l       % length-2^r vector of parity check digits, recommend: r=0: l=0, r=1: l=[0 15], r=2: l = [0 10 10 15]
+        m       % size of chirp code (2^m is length of codewords in each slot) recommend m = 6, 7 or 8
+        p       % 2^p slots, require p<=(m-r)(m-r+3)/2-1 for complex
+                %                    p<=(m-r)(m-r+1)/2-1 for real
+        K       % number of messages
+        params  % various; see below
+        patches % number of patches
     end
 
     methods
-        function self = Decoder(Y,r,l,parity,re,m,p,K,patches,params_in)
+        function self = Decoder(Y,r,l,parity,re,m,p,K,params_in)
             self.Y=Y;
             self.r=r;
             self.parity=parity;
@@ -21,7 +23,8 @@ classdef Decoder
             self.m=m;
             self.p=p;
             self.K=K;
-            self.patches=patches;
+            self.patches=2^r;
+            self.l=l;
 
             %default parameter values
             self.params.alpha = 0.1; %accept components if coefficient is within alpha of 1
@@ -55,22 +58,7 @@ classdef Decoder
 
         function [output_bits, timing] = chirrup_decode(self)
 
-         %chirrup_decode  Performs CHIRRUP decoding
-        %
-        % Y          Y{p} is a 2^m x 2^p matrix of measurements for patch p
-        % r          0, 1 or 2; 2^r patches
-        % l          length-2^r vector of parity check digits
-        %            recommend: r=0: l=0, r=1: l=[0 15], r=2: l = [0 10 10 15]
-        % parity     parity check codes generated in the tree encoding
-        %            leave empty if only 1 patch (r=0) is used
-        % re         logical: false=complex chirps, true=real chirps
-        % m          size of chirp code (2^m is length of codewords in each slot)
-        %            recommend m = 6, 7 or 8
-        % p          2^p slots
-        %            require p<=(m-r)(m-r+3)/2-1 for complex
-        %                    p<=(m-r)(m-r+1)/2-1 for real
-        % K          number of messages
-        % params     various; see below
+        % chirrup_decode  Performs CHIRRUP decoding
         %
         % output_bits  B x K matrix of the K B-bit messages
         % timing       running time in seconds
@@ -202,7 +190,6 @@ classdef Decoder
         %               components found in other slots.
         %
         % y        measurement vector for given slot
-        % re       logical: false=complex chirps, true=real chirps
         % nitlim   iteration limit
         % slot     slot number
         %
@@ -315,15 +302,12 @@ classdef Decoder
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        function found_bits = tree_decoder(output_bits)
+        function found_bits = tree_decoder(self, output_bits)
 
         % tree_decoder  Decodes a patched message encoded by tree_encoder.m
         %
         % output_bits     output_bits{i} is a B x k_i matrix of the k_i B-bit
         %                 messages found in patch i
-        % l               length-n vector of number of parity check digits
-        %                 use the same as for tree_encoder
-        % parity          parity check codes: use the one outputted by tree-encoder
         %
         % found_bits       N x K matrix of the K repatched N-bit messages
         %
@@ -363,7 +347,6 @@ classdef Decoder
         % findPb  Find P matrix & b vector recursively.
         %
         % y         signal, length 2^M
-        % re        logical: false=complex chirps, true=real chirps
         %
         % Pout      P matrix
         % bout      b vector
@@ -604,8 +587,6 @@ classdef Decoder
 
         % probe_ye  probe data vector with error vector
         %
-        % [prb,yprod] = probe_ye(y,e)
-        %
         % given data vector y and "error value" e,
         % compute Hadamard transform prb  of yprod = conj(y(a)) * y(a+e)
 
@@ -689,7 +670,7 @@ classdef Decoder
                 MM = ((M^2+3*M)/2); %    MMold = ((M^2+M)/2);
                 ixmid = (M+1)*M/2;
             else
-                MM = 0.5*M*(M+1)
+                MM = 0.5*M*(M+1);
                 ixmid = (M-1)*M/2;
             end
 
@@ -717,12 +698,10 @@ classdef Decoder
             if self.re == 0
                 ix = find(tril(ones(M),0));  % indices of lower tri, including diag
             else
-                ix = find(tril(ones(M),-1)) % doesnt include the diagonal
+                ix = find(tril(ones(M),-1)); % doesnt include the diagonal
             end
-            disp(P(ix))
             P(ix) = bvec(1:ixmid);
             P = P | P';  % make symmetric
-            disp(P)
             b = bvec(ixmid+1:end);
 
             end

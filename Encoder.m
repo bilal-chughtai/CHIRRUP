@@ -1,49 +1,48 @@
 classdef Encoder
 %Class responsible for encoding chirps - contains all functons pertaining to encoding
     properties
-        r
-        l
-        re
-        m
-        p
-        K
-        sigma
-        input_bits
-        B
-        patches
+        r               % 0, 1 or 2; 2^r patches
+        l               % length-2^r vector of parity check digits, recommend: r=0: l=0, r=1: l=[0 15], r=2: l = [0 10 10 15]
+        re              % logical: false=complex chirps, true=real chirps
+        m               % size of chirp code (2^m is length of codewords in each slot), recommend m = 6, 7 or 8
+        p               % 2^p slots require p<=(m-r)(m-r+3)/2-1 for complex
+                        % p<=(m-r)(m-r+1)/2-1 for real
+        K               % number of messages
+        EbN0            % energy-per-bit (Eb/N0)
+        input_bits      % raw input bitstring
+        B               % number of bits being encoded
+        patches         % number of patches
     end
 
     methods
-        function self = Encoder(r,l,re,m,p,K,sigma,input_bits, B, patches)
+        function self = Encoder(r,l,re,m,p,K,EbN0,input_bits)
             self.r = r;
             self.l = l;
             self.re = re;
             self.m = m;
             self.p = p;
             self.K = K;
-            self.sigma = sigma;
+            self.EbN0 = EbN0;
             self.input_bits = input_bits;
-            self.B=B;
-            self.patches=patches;
+            self.patches=2^r;
+            if (re==0)
+                 B_patch = m*(m+3)/2 + p - 1;
+            else
+                 B_patch = m*(m+1)/2 + p - 1;
+            end
+            self.B = self.patches*B_patch - sum(l(2:end));
         end
 
+        function [self,input_bits] = generate_random_bits(self)
+        % generates some random bits to pass into encoder
+            bits = rand(self.B,self.K) > 0.5;
+            self.input_bits=bits
+        end
 
 
         function [Y parity] = chirrup_encode(self)
 
         %chirrup_encode  Generates K random messages and performs CHIRRUP encoding
-        %
-        % r          0, 1 or 2; 2^r patches
-        % l          length-2^r vector of parity check digits
-        %            recommend: r=0: l=0, r=1: l=[0 15], r=2: l = [0 10 10 15]
-        % re         logical: false=complex chirps, true=real chirps
-        % m          size of chirp code (2^m is length of codewords in each slot)
-        %            recommend m = 6, 7 or 8
-        % p          2^p slots
-        %            require p<=(m-r)(m-r+3)/2-1 for complex
-        %                    p<=(m-r)(m-r+1)/2-1 for real
-        % K          number of messages
-        % EbN0       energy-per-bit (Eb/N0)
         %
         % Y            Y{p} is a 2^m x 2^p matrix of measurements for patch p
         % input_bits   B x K matrix of the K B-bit messages
@@ -54,21 +53,22 @@ classdef Encoder
         %
         % AJT (12/9/18)
 
-            patches = 2^self.r;
+            
             parity = [];
             %generate random messages
             % input_bits = rand(B,K)>0.5;
             %tree encoding
-            if (patches>1)
-                [patch_bits parity] = self.tree_encoder(self.input_bits,B_patch,patches,l);
+            if (self.patches>1)
+                [patch_bits parity] = self.tree_encoder(self.input_bits,B_patch,self.patches,self.l);
                 patch_bits = permute(patch_bits,[2 1 3]);
             else
-                patch_bits = self.input_bits';
+                patch_bits = self.input_bits.';
             end
             flag = false;
             %generate measurements for each patch
-            for patch = 1:patches
-                Y{patch} = self.sim_from_bits(patch_bits(:,:,patch));
+            for patch = 1:self.patches
+                sigma = sqrt(self.patches*2^self.m/(self.B*self.EbN0));
+                Y{patch} = self.sim_from_bits(sigma,patch_bits(:,:,patch));
             end
         end
 
@@ -81,8 +81,6 @@ classdef Encoder
         % input_bits      B x K matrix of the K B-bit messages
         % N               number of bits per patch
         % n               number of patches
-        % l               length-n vector of number of parity check digits
-        %                 recommend: n=1: l=0, n=2: l=[0 15], n=4: l = [0 10 10 15]
         %
         % patch_bits       N x K x n tensor of the K N-bit messages in each patch
         %
@@ -96,29 +94,21 @@ classdef Encoder
             self.l(1) = 0;
             %l(n) = N*n - size(input_bits,1) - sum(l) + l(n);
 
-            patch_bits(:,:,1) = input_bits(1:N,:);
+            patch_bits(:,:,1) = self.input_bits(1:N,:);
             count = N;
             for i = 2:n
-                patch_bits(1:N-l(i),:,i) = input_bits(count+1:count+N-l(i),:);
-                count = count + N - l(i);
-                parity{i} = double(rand(l(i),count)>0.5);
-                patch_bits(N-l(i)+1:N,:,i) = mod(parity{i}*input_bits(1:count,:),2);
+                patch_bits(1:N-self.l(i),:,i) = self.input_bits(count+1:count+N-l(i),:);
+                count = count + N - self.l(i);
+                parity{i} = double(rand(self.l(i),count)>0.5);
+                patch_bits(N-self.l(i)+1:N,:,i) = mod(parity{i}*self.input_bits(1:count,:),2);
             end
         end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        function Y = sim_from_bits(self,bits)
+        function Y = sim_from_bits(self,sigma,bits)
 
         % sim_from_bits  Generates binary chirp measurements from bits
-        %
-        % re         logical: false=complex chirps, true=real chirps
-        % m          size of chirp code (2^m is length of codewords in each slot)
-        %            recommend m = 6, 7 or 8
-        % K          number of messages
-        % p          2^p slots
-        %            require p<=(m-r)(m-r+3)/2-1 for complex
-        %                    p<=(m-r)(m-r+1)/2-1 for real
         % sigma      SD of noise: sigma = sqrt(patches*2^m/(B*EbN0))
         % bits       k x 2^m matrix of bits to encode
         %
@@ -152,9 +142,9 @@ classdef Encoder
 
             %add noise (Gaussian for real, Complex Gaussian for complex)
             if (self.re==0)
-                Y = Y + repmat(self.sigma*(randn(2^self.m,1)+1i*randn(2^self.m,1)),[1 2^self.p]);
+                Y = Y + repmat(sigma*(randn(2^self.m,1)+1i*randn(2^self.m,1)),[1 2^self.p]);
             else
-                Y = Y + repmat(self.sigma*randn(2^self.m,1),[1 2^self.p]);
+                Y = Y + repmat(sigma*randn(2^self.m,1),[1 2^self.p]);
 
             end
         end
@@ -179,6 +169,13 @@ classdef Encoder
 
         function [P,b] = makePb(self,bits)
 
+        % generates a P and b from a bit string
+        %
+        % bits      vector of bits
+        %
+        % P     symettric real matrix
+        % b     real vector
+
             if (self.re==0)
                 nMuse = self.m*(self.m+1)/2;
             else
@@ -197,9 +194,9 @@ classdef Encoder
     methods(Static)
 
             function rm = gen_chirp(P,b)
+            % generates a read-muller code from an input P and b
 
                 M = length(b);
-                % construct Reed-Muller code from P and b
                 rm = zeros(2^M,1);
                 a = zeros(M,1);
                 for q = 1:2^M
