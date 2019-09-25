@@ -16,6 +16,7 @@ classdef Decoder
 
     methods
         function self = Decoder(Y,r,l,parity,re,m,p,K,params_in)
+            addpath('utils');
             self.Y=Y;
             self.r=r;
             self.parity=parity;

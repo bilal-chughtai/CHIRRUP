@@ -1,4 +1,6 @@
-function [ave_time, propfound] = run(r, l, re, m, p, EbN0, K, trials)
+
+function [propfound, ave_time] = run(r, l, re, m, p, EbN0, K, trials)
+    addpath('utils');
 %master testing function, runs multiple trials, for definitions of
 %parameters see the Encoder and Decoder classes
 

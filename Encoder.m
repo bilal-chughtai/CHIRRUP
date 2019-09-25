@@ -17,6 +17,7 @@ classdef Encoder
 
     methods
         function self = Encoder(r,l,re,m,p,K,EbN0,input_bits)
+            addpath('utils');
             self.r = r;
             self.l = l;
             self.re = re;
@@ -60,7 +61,7 @@ classdef Encoder
             % input_bits = rand(B,K)>0.5;
             %tree encoding
             if (self.patches>1)
-                [patch_bits parity] = self.tree_encoder(self.B_patch);
+                [patch_bits parity] = self.tree_encoder();
                 patch_bits = permute(patch_bits,[2 1 3]);
             else
                 patch_bits = self.input_bits.';
@@ -75,14 +76,12 @@ classdef Encoder
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-        function [patch_bits parity] = tree_encoder(self,N,n)
-            n=self.patches
-
+        function [patch_bits parity] = tree_encoder(self)
         % tree_encoder  Encodes a message into patches using parity check digits
         %
         % input_bits      B x K matrix of the K B-bit messages
         % N               number of bits per patch
-        % n               number of patches
+        %
         %
         % patch_bits       N x K x n tensor of the K N-bit messages in each patch
         %
@@ -96,13 +95,13 @@ classdef Encoder
             self.l(1) = 0;
             %l(n) = N*n - size(input_bits,1) - sum(l) + l(n);
 
-            patch_bits(:,:,1) = self.input_bits(1:N,:);
-            count = N;
-            for i = 2:n
-                patch_bits(1:N-self.l(i),:,i) = self.input_bits(count+1:count+N-self.l(i),:);
+            patch_bits(:,:,1) = self.input_bits(1:self.B_patch,:);
+            count = self.B_patch;
+            for i = 2:self.patches
+                patch_bits(1:self.B_patch-self.l(i),:,i) = self.input_bits(count+1:count+self.B_patch-self.l(i),:);
                 count = count + N - self.l(i);
                 parity{i} = double(rand(self.l(i),count)>0.5);
-                patch_bits(N-self.l(i)+1:N,:,i) = mod(parity{i}*self.input_bits(1:count,:),2);
+                patch_bits(self.B_patch-self.l(i)+1:self.B_patch,:,i) = mod(parity{i}*self.input_bits(1:count,:),2);
             end
         end
 
