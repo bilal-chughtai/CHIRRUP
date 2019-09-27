@@ -9,7 +9,7 @@ P1=randP(m,k)
 P2=randP(m,k)
 
 
-y=gen_general_chirp_no_b(P1,zeta)+gen_general_chirp_no_b(P2,zeta)
+y=gen_general_chirp_no_b(P1,zeta)%+gen_general_chirp_no_b(P2,zeta)
 
 
 
@@ -26,7 +26,7 @@ while iteration <= iterations
         power=2^(iterations-iteration)
         e=zeros(m,1);
         e(basis_index,1)=1;
-        probs=probe_ye(y,e,power,P_recovered, zeta); %TODO: feed in P_0;
+        probs=probe_ye(y,e,power,P_recovered, zeta);
         probs=abs(probs);
         [value, location]=sort(-probs);
         location=location(1)-1;
