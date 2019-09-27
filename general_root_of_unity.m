@@ -1,8 +1,15 @@
-m=4;
-k=3;
-P=randP(m,k)
+%This script is self contained, and prototypes the general root of unity
+%chirp ideas outlined in the report
 
-y=gen_general_chirp_no_b(P,k); 
+
+m=4;
+k=2;
+zeta=exp(2*pi*i/2^k)
+P1=randP(m,k)
+P2=randP(m,k)
+
+
+y=gen_general_chirp_no_b(P1,zeta)+gen_general_chirp_no_b(P2,zeta)
 
 
 
@@ -12,26 +19,28 @@ P_recovered = zeros(m);
 iteration=1
 
 while iteration <= iterations
-    for basis_index=1:m
+    P_staging = zeros(m);
     
+    for basis_index=1:m
 
-    %while iteration <= iterations
-        power=iterations-iteration+1
+        power=2^(iterations-iteration)
         e=zeros(m,1);
         e(basis_index,1)=1;
-        probs=probe_ye(y,e,power,P_recovered, P); %TODO: feed in P_0
-        probs=abs(probs)
+        probs=probe_ye(y,e,power,P_recovered, zeta); %TODO: feed in P_0;
+        probs=abs(probs);
         [value, location]=sort(-probs);
         location=location(1)-1;
         rowpart = dec2bin(location,m)=='1'
-        P_recovered(basis_index,:)=P_recovered(basis_index,:)+2^(iteration-1).*rowpart
-        %iteration=iteration+1
+        P_staging(basis_index,:)=P_staging(basis_index,:)+2^(iteration-1).*rowpart
+
     end
+    P_recovered=P_recovered+P_staging
     iteration=iteration+1
     
 end
 
-P_recovered - P
+P_recovered - P1
+P_recovered - P2
     
 
 
@@ -40,7 +49,7 @@ P_recovered - P
 
 
 
-function [prb] = probe_ye(y,e,power,P_recovered, P)
+function [prb] = probe_ye(y,e,power,P_recovered, zeta)
 
         % probe_ye  probe data vector with error vector
         %
@@ -60,7 +69,11 @@ function [prb] = probe_ye(y,e,power,P_recovered, P)
             %a
 
             %peel_off
-            peel_off = i.^-(e'*P_recovered*a)
+            for j = 1:Mpow
+                peel_off(j,1) = zeta^(-a(:,j)'*P_recovered*a(:,j));
+            end
+            
+          %  peel_off = zeta.^-(e'*P_recovered*a)
 
             % a plus e values
             apebin = bitxor(a,e);
@@ -68,7 +81,10 @@ function [prb] = probe_ye(y,e,power,P_recovered, P)
             
             apedec=2.^(M-1:-1:0)*apebin;
             %apedec
-
+            
+            y=y.*peel_off
+            
+            
             % y(a+e)
             yape = y(apedec+1);
             %[y yape]
@@ -81,13 +97,9 @@ function [prb] = probe_ye(y,e,power,P_recovered, P)
             
             %i^(e'*P*e)*i.^(2*e'*P_recovered*a)
             
-            yprod = yprod.*peel_off.'
+           %expected_yprod = exp(i*pi/4)^(e'*P*e)*(-1).^(e'*P1*a)
             
-            P1 = (P - mod(P,2))/2
-            
-            expected_yprod = exp(i*pi/4)^(e'*P*e)*(-1).^(e'*P1*a)
-            
-            yprod-expected_yprod.'
+%            yprod-expected_yprod.'
            
 
             % use fast Walsh-Hadamard transform routine
@@ -96,8 +108,7 @@ function [prb] = probe_ye(y,e,power,P_recovered, P)
         end
 
 
-function rm = gen_general_chirp_no_b(P,k)
-    zeta=exp(2*pi*i/2^k);
+function rm = gen_general_chirp_no_b(P,zeta)
     M = size(P,1);
     % M=length(b);
     % constructs a general Read-Muller code as above, but with no b term, and replacing i with a general root of unity, e^2i*pi/k. k denotes the degree of root of unity
